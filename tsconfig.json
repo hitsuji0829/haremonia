@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noEmit": true,
+    "incremental": true,
+    "module": "esnext",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    // ★ 変更: パスエイリアスを修正
+    "paths": {
+      "@/lib/*": ["./src/lib/*"], // lib は src 直下
+      "@/components/*": ["./src/app/components/*"], // components は src/app 直下
+      "@/context/*": ["./src/app/context/*"], // context は src/app 直下
+      "@/community/_components/*": ["./src/app/community/_components/*"] // community/_components は src/app/community 直下
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

@@ -100,8 +100,8 @@ export default async function ArtistPage({ params }) {
     {/* 作品リスト */}
     {works.length > 0 ? (
       worksWithArtistInfo.map(work => (
-        <div key={work.id} className="mb-8 border border-gray-200 rounded-xl shadow-lg overflow-hidden bg-white">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6">
+        <div key={work.id} className="mb-8 rounded-xl shadow-lg overflow-hidden bg-white">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6"> 
             <ImageWithFallback
               src={work.jacket_url}
               alt={work.title || "作品のジャケット"}

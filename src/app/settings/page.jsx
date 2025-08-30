@@ -3,6 +3,7 @@
 import React from 'react';
 import { useAudioPlayer } from '@/context/AudioPlayerContext';
 import { useSettings } from '../context/SettingsContext';
+import Link from 'next/link';
 
 export default function SettingsPage() {
   const { emotesEnabled, toggleEmotes } = useAudioPlayer(); // ← 追加
@@ -11,6 +12,7 @@ export default function SettingsPage() {
   return (
     <main className="p-4 max-w-4xl mx-auto min-h-screen mb-40">
       <h1 className="text-3xl font-bold mb-6 text-white select-none">設定</h1>
+
 
       <section className="mt-6">
         <h2 className="text-lg font-semibold text-white mb-3 select-none">表示</h2>
@@ -95,9 +97,18 @@ export default function SettingsPage() {
             </button>
         </div>
       </section>
-
-
       {/* 今後ここに他の設定を追加 */}
+      <div className="mt-10 border-t border-gray-800 pt-6">
+        <div className="flex justify-center">
+          <Link
+            href="/settings/faq"
+            className="inline-flex items-center gap-2 rounded-md border border-gray-700 bg-gray-800 px-4 py-2 text-sm text-gray-100 hover:bg-gray-700"
+          >
+            よくある質問（FAQ）
+          </Link>
+        </div>
+      </div>
     </main>
+    
   );
 }

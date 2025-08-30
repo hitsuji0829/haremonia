@@ -1,4 +1,4 @@
-// src/app/artists/[id]/page.tsx (または page.js)
+// src/app/artists/[id]/page.js
 // このファイルはサーバーコンポーネントとして動作するため、'use client' は不要です。
 
 import { supabase } from '@/lib/supabaseClient'; // 絶対パスに統一
@@ -6,17 +6,19 @@ import ImageWithFallback from '@/components/ImageWithFallback'; // 絶対パス�
 import TrackList from '@/components/TrackList'; // 絶対パスに統一
 import FavoriteButton from '@/components/FavoriteButton'; // 絶対パスに統一
 import GenreShufflePlayer from '@/components/GenreShufflePlayer';
+import ArtistBioToggle from '@/components/ArtistBioToggle';
+import ArtistHeaderWithBio from '@/components/ArtistHeaderWithBio';
+
 
 export default async function ArtistPage({ params }) {
-  const currentParams = params;
-  const { id } = currentParams;
+  const { id } = params;
 
   console.log('--- ArtistPage Server Component Render ---');
   console.log('取得しようとしているアーティストID:', id);
 
   const { data: artist, error: artistError } = await supabase
     .from('artists')
-    .select('*')
+    .select('id, name, image_url, bio, socials')
     .eq('id', id)
     .single();
 
@@ -71,16 +73,13 @@ export default async function ArtistPage({ params }) {
   return (
   <main className="p-4 max-w-4xl mx-auto mb-40">
     {/* アーティストのカバー画像と名前 */}
-    <div className="flex items-center gap-6 mb-8 p-4 bg-white rounded-xl shadow-md">
-      <ImageWithFallback
-        src={artist.image_url}
-        alt={artist.name || "アーティスト"}
-        className="w-24 h-24 object-cover rounded-full shadow-lg flex-shrink-0 select-none"
-        fallbackSrc="https://placehold.co/100x100/aaaaaa/ffffff?text=Artist"
-      />
-      <h1 className="text-3xl font-extrabold text-gray-900 select-none">{artist.name}</h1>
-      <FavoriteButton artistId={artist.id} />
-    </div>
+    <ArtistHeaderWithBio
+      name={artist.name}
+      imageUrl={artist.image_url}
+      bio={artist.bio}
+      artistId={artist.id}
+      socials={artist.socials}
+    />
 
     {/* 全曲シャッフル・ジャンル別シャッフル */}
     {works.length > 0 && (

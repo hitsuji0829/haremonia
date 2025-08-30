@@ -41,7 +41,7 @@ export default function GlobalAudioPlayer() {
   };
 
   const handleSeekChange = (e) => {
-    seekTo(parseFloat(e.target.value));
+    seekTo(Number(e.target.value));
   };
 
   const handleLyricsButtonClick = () => {
@@ -232,7 +232,7 @@ export default function GlobalAudioPlayer() {
               disabled={isLoadingAudio}
             />
 
-            <span className="text-sm text-gray-200 select-none">{formatTime(duration)}</span>
+            <span className="text-sm text-gray-200 select-none">{formatTime(Number(duration))}</span>
 
             {/* 歌詞ボタン（曲があれば常に表示） */}
             {currentTrack && (

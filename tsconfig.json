@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "target": "ES2017",
     "lib": [
       "dom",
@@ -24,6 +25,7 @@
     ],
     // ★ 変更: パスエイリアスを修正
     "paths": {
+      "@/*": ["src/*"],
       "@/lib/*": ["./src/lib/*"], // lib は src 直下
       "@/components/*": ["./src/app/components/*"], // components は src/app 直下
       "@/context/*": ["./src/app/context/*"], // context は src/app 直下
@@ -35,7 +37,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "src/app/artists/[id]/page.js", "src/app/artists/[id]/page.js"  ],
   "exclude": [
     "node_modules"
   ]

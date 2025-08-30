@@ -13,21 +13,50 @@ export default function LyricsPanel({ currentTrack, showLyricsPanel, toggleLyric
   const [lyrics, setLyrics] = useState(currentTrack?.lyrics || '');
   const [loading, setLoading] = useState(false);
 
+  const [credits, setCredits] = useState({ lyricist: '', composer: '', arranger: '' });
+  const [meta, setMeta] = useState({ year: null, artistName: '' });
+
   useEffect(() => {
-    setLyrics(currentTrack.lyrics || '');
+    setLyrics(currentTrack?.lyrics || '');
+    setCredits({
+      lyricist: currentTrack?.lyricist || '',
+      composer: currentTrack?.composer || '',
+      arranger: currentTrack?.arranger || '',
+    });
+    setMeta((prev) => ({
+      year: currentTrack?.created_at ? new Date(currentTrack.created_at).getFullYear() : prev.year,
+      artistName: currentTrack?.artist_name || currentTrack?.artist?.name || prev.artistName,
+    }))
   }, [currentTrack?.id]);
 
   useEffect(() => {
-    if (!showLyricsPanel) return;
-    if (!currentTrack?.id) return;
-    if (!lyrics && lyrics.trim().length > 0) return;
+    if (!showLyricsPanel || !currentTrack?.id) return;
+
+    const needFetch =
+      !lyrics?.trim() ||
+      !credits.lyricist || !credits.composer || !credits.arranger ||
+      !meta.artistName || !meta.year;
+    if (!needFetch) return;
 
     let cancelled = false;
     (async ()=> {
       setLoading(true);
       const { data, error } = await supabase
         .from('tracks')
-        .select('lyrics')
+        .select(`
+          lyrics,
+          lyricist,
+          composer,
+          arranger,
+          created_at,
+          works (
+            id,
+            title,
+            jacket_url,
+            created_at,
+            artists ( id, name )
+          )
+        `)
         .eq('id', currentTrack.id)
         .single();
 
@@ -36,14 +65,26 @@ export default function LyricsPanel({ currentTrack, showLyricsPanel, toggleLyric
           console.error('歌詞取得エラー:', error);
           setLyrics('');
         } else {
-          setLyrics(data?.lyrics || '');
+          setLyrics((data?.lyrics ?? '').toString());
+          setCredits({
+            lyricist: data?.lyricist || '',
+            composer: data?.composer || '',
+            arranger: data?.arranger || '',
+          });
+          const artistFromJoin = data?.works?.artists?.name || '';
+          const yearFromTrack = data?.created_at ? new Date(data.created_at).getFullYear() : null;
+          const yearFromWork  = data?.works?.created_at ? new Date(data.works.created_at).getFullYear() : null;
+          setMeta({
+            year: yearFromTrack ?? yearFromWork ?? null,
+            artistName: artistFromJoin || currentTrack?.artist_name || currentTrack?.artist?.name || '',
+          })
         }
         setLoading(false);
       }
     })();
 
     return () => { cancelled = true; };
-  }, [showLyricsPanel, currentTrack?.id, lyrics]);
+  }, [showLyricsPanel, currentTrack?.id, lyrics, credits, meta.artistName, meta.year]);
 
   // currentTrack がない、または歌詞がない場合は表示しない
   if (!currentTrack) {
@@ -72,15 +113,40 @@ export default function LyricsPanel({ currentTrack, showLyricsPanel, toggleLyric
         {/* 楽曲情報 */}
         <div className="text-center mb-4">
           <h3 className="text-xl font-bold truncate select-none">{currentTrack.title}</h3>
-          <p className="text-sm text-gray-400 truncate select-none">{currentTrack.artist_name || currentTrack.artist?.name}</p>
+          <p className="text-sm text-gray-400 truncate select-none">
+            {meta.artistName || currentTrack.artist_name || currentTrack.artist?.name}
+          </p>
         </div>
 
         {/* 歌詞表示エリア */}
-        <div className="flex-grow overflow-y-auto whitespace-pre-wrap text-base leading-relaxed p-2 text-gray-100 select-none">
+        <div className="flex-grow overflow-y-auto p-2 text-gray-100">
           {loading ? (
-            <p className="text-center text-gray-400">歌詞を読み込み中…</p>
-          ) : (lyrics && lyrics.trim().length > 0) ? (
-            lyrics
+            <p className="text-center text-gray-400 select-none">歌詞を読み込み中…</p>
+          ) : lyrics && lyrics.trim().length > 0 ? (
+            <>
+              {/* 歌詞本体 */}
+              <div className="whitespace-pre-wrap leading-relaxed select-none text-base">
+                {lyrics}
+              </div>
+
+              {/* ★ 追加: クレジット＆著作権表示（歌詞の最下部に小さく） */}
+              <div className="mt-4 border-t border-white/10 pt-2 text-xs text-gray-400 select-none">
+                {(credits.lyricist || credits.composer || credits.arranger) && (
+                  <div className="space-x-3">
+                    {credits.lyricist && <span>作詞: {credits.lyricist}</span>}
+                    {credits.composer && <span>作曲: {credits.composer}</span>}
+                    {credits.arranger && <span>編曲: {credits.arranger}</span>}
+                  </div>
+                )}
+                {(meta.year || meta.artistName) && (
+                  <div className="mt-1">
+                    (C)(P){' '}
+                    {meta.year ? `${meta.year} ` : ''}
+                    {meta.artistName}
+                  </div>
+                )}
+              </div>
+            </>
           ) : (
             <p className="text-center text-gray-500 select-none">歌詞がありません。</p>
           )}

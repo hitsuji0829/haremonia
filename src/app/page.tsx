@@ -8,6 +8,23 @@ import GenreShufflePlayer from '@/components/GenreShufflePlayer';
 import FeaturedTracks from '@/components/FeaturedTracks';
 import { GENRES, genreLabelFromValue } from '@/lib/genres';
 
+function TitleBar({ children, noCopy = false }: { children: React.ReactNode; noCopy?: boolean }) {
+  return (
+    <div
+      className={`mb-3 flex items-center justify-between ${noCopy ? 'select-none' : ''}`}
+      {...(noCopy
+        ? {
+            onCopy: (e) => e.preventDefault(),
+            onCut: (e) => e.preventDefault(),
+            onContextMenu: (e) => e.preventDefault(),
+          }
+        : {})}
+    >
+      <h2 className="text-xl font-bold text-gray-100">{children}</h2>
+    </div>
+  );
+}
+
 // ------- utils -------
 function pickRandomN<T>(arr: T[], n: number): T[] {
   const shuffled = [...arr];

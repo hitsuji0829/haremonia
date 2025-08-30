@@ -4,11 +4,20 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient'; // 絶対パスに統一
 import ImageWithFallback from '@/components/ImageWithFallback'; // 絶対パスに統一
+import Link from 'next/link';
 import FavoriteButton from '@/components/FavoriteButton'; // 絶対パスに統一
 import { useAudioPlayer } from '@/context/AudioPlayerContext'; // 絶対パスに統一
 
 export default function LibraryPage() {
-  const { user, profile, loadingAuthAndProfile } = useAudioPlayer();
+  const toMMSS = (sec) => {
+    const n = Number(sec);
+    if (!Number.isFinite(n) || n < 0) return '--:--';
+    const m = Math.floor(n / 60);
+    const s = Math.floor(n % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const { user, profile, loadingAuthAndProfile, playTrack, currentTrack, isPlaying, togglePlayPause } = useAudioPlayer();
   const [favorites, setFavorites] = useState({ artists: [], works: [], tracks: [] });
   const [loadingFavorites, setLoadingFavorites] = useState(true);
   const [errorFavorites, setErrorFavorites] = useState(null);
@@ -32,7 +41,7 @@ export default function LibraryPage() {
           user_id,
           artist_id,
           work_id,
-          track_id, // track_id を取得
+          track_id,
           created_at,
           artists:artist_id(id, name, image_url),
           works:work_id(id, title, jacket_url, artists(id, name)),
@@ -94,6 +103,15 @@ export default function LibraryPage() {
     });
   };
 
+  const handleTrackClick = (track, index) => {
+    if (currentTrack?.id === track.id) {
+      togglePlayPause();
+    } else {
+      // 検索ページと同様にプレイリストを渡す
+      playTrack(track, favorites.tracks, index);
+    }
+  };
+
 
   return (
     <main className="p-4 max-w-4xl mx-auto min-h-screen mb-40">
@@ -118,16 +136,34 @@ export default function LibraryPage() {
             {(favorites.artists || []).length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {favorites.artists.map(artist => (
-                  <div key={artist.id} className="bg-white rounded-xl shadow-md p-4 flex items-center gap-4">
-                    <ImageWithFallback
-                      src={artist.image_url}
-                      alt={artist.name}
-                      className="w-12 h-12 rounded-full object-cover select-none"
-                      fallbackSrc="https://placehold.co/50x50/aaaaaa/ffffff?text=A"
-                    />
-                    <span className="font-semibold text-gray-800 flex-grow truncate select-none">{artist.name}</span>
-                    <FavoriteButton artistId={artist.id} initialFavorited={true} onFavoriteRemoved={handleFavoriteRemoved} />
-                  </div>
+                  <Link
+                    href={`/artists/${artist.id}`}
+                    key={artist.id}
+                    className="block bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 transition"
+                  >
+                    <div className="flex items-center gap-4">
+                      <ImageWithFallback
+                        src={artist.image_url}
+                        alt={artist.name}
+                        className="w-12 h-12 rounded-full object-cover select-none"
+                        fallbackSrc="https://placehold.co/50x50/aaaaaa/ffffff?text=A"
+                      />
+                      <span className="font-semibold text-gray-800 flex-grow truncate select-none">{artist.name}</span>
+
+                      {/* ★ ここで遷移を止める（お気に入りだけクリック可） */}
+                      <div
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                        role="button"
+                        aria-label="お気に入りの切り替え"
+                      >
+                        <FavoriteButton
+                          artistId={artist.id}
+                          initialFavorited={true}
+                          onFavoriteRemoved={handleFavoriteRemoved}
+                        />
+                      </div>
+                    </div>
+                  </Link>
                 ))}
               </div>
             ) : (
@@ -138,27 +174,40 @@ export default function LibraryPage() {
           {/* お気に入り作品 */}
           <section>
             <h2 className="text-2xl font-bold text-gray-100 mb-4 select-none">お気に入り作品</h2>
-            {(favorites.works || []).length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {favorites.works.map(work => (
-                  <div key={work.id} className="bg-white rounded-xl shadow-md p-4 flex items-center gap-4">
-                    <ImageWithFallback
-                      src={work.jacket_url}
-                      alt={work.title}
-                      className="w-12 h-12 object-cover rounded-md select-none"
-                      fallbackSrc="https://placehold.co/50x50/cccccc/333333?text=Work"
-                    />
-                    <div className="flex flex-col flex-grow truncate">
-                      <span className="font-semibold text-gray-800 truncate select-none">{work.title}</span>
-                      <span className="text-sm text-gray-600 truncate select-none">{work.artists?.name}</span>
-                    </div>
-                    <FavoriteButton workId={work.id} initialFavorited={true} onFavoriteRemoved={handleFavoriteRemoved} />
+            {favorites.works.map(work => (
+              <Link
+                href={`/artists/${work.artists?.id}`}
+                key={work.id}
+                className="block bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 transition"
+              >
+                <div className="flex items-center gap-4">
+                  <ImageWithFallback
+                    src={work.jacket_url}
+                    alt={work.title}
+                    className="w-12 h-12 object-cover rounded-md select-none"
+                    fallbackSrc="https://placehold.co/50x50/cccccc/333333?text=Work"
+                  />
+                  <div className="flex flex-col flex-grow truncate">
+                    <span className="font-semibold text-gray-800 truncate select-none">{work.title}</span>
+                    <span className="text-sm text-gray-600 truncate select-none">{work.artists?.name}</span>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 select-none">お気に入り作品はまだありません。</p>
-            )}
+
+                  {/* お気に入りボタンのクリックでは遷移しないようにする */}
+                  <div
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    role="button"
+                    aria-label="お気に入りの切り替え"
+                  >
+                    <FavoriteButton
+                      workId={work.id}
+                      initialFavorited={true}
+                      onFavoriteRemoved={handleFavoriteRemoved}
+                    />
+                  </div>
+                </div>
+              </Link>
+            ))}
+
           </section>
 
           {/* お気に入り楽曲 */}
@@ -166,8 +215,13 @@ export default function LibraryPage() {
             <h2 className="text-2xl font-bold text-gray-100 mb-4 select-none">お気に入り楽曲</h2>
             {(favorites.tracks || []).length > 0 ? (
               <div className="space-y-2">
-                {favorites.tracks.map(track => (
-                  <div key={track.id} className="bg-white rounded-xl shadow-md p-4 flex items-center gap-4">
+                {favorites.tracks.map((track, idx) => (
+                  <button
+                    key={track.id}
+                    onClick={() => handleTrackClick(track, idx)}
+                    className={`w-full text-left bg-white rounded-xl shadow-md p-4 flex items-center gap-4 hover:bg-gray-50 transition
+                                ${currentTrack?.id === track.id ? 'ring-2 ring-indigo-500' : ''}`}
+                  >
                     <ImageWithFallback
                       src={track.jacket_url}
                       alt={track.title}
@@ -176,11 +230,23 @@ export default function LibraryPage() {
                     />
                     <div className="flex flex-col flex-grow truncate">
                       <span className="font-semibold text-gray-800 truncate select-none">{track.title}</span>
-                      <span className="text-sm text-gray-600 truncate select-none">{track.artist_name} - {track.work_title}</span>
+                      <span className="text-sm text-gray-600 truncate select-none">
+                        {track.artist_name} - {track.work_title}
+                      </span>
                     </div>
-                    <span className="text-sm text-gray-500 select-none">{track.duration}</span>
-                    <FavoriteButton trackId={track.id} initialFavorited={true} onFavoriteRemoved={handleFavoriteRemoved} />
-                  </div>
+
+                    {/* 秒 → m:ss */}
+                    <span className="text-sm text-gray-500 select-none">{toMMSS(track.duration)}</span>
+
+                    {/* お気に入りボタンはクリック伝播を止めて再生を阻害しない */}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <FavoriteButton
+                        trackId={track.id}
+                        initialFavorited={true}
+                        onFavoriteRemoved={handleFavoriteRemoved}
+                      />
+                    </div>
+                  </button>
                 ))}
               </div>
             ) : (

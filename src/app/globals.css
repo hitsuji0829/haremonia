@@ -34,3 +34,83 @@ body {
 .animate-fade-in-out { animation: fade-in-out 3s ease forwards; }
 
 html { scroll-behavior: smooth; }
+
+/* 右上のFABとノッチを避けるための共通ユーティリティ */
+@layer utilities {
+  /* 上：ノッチ分 + 少し余白 */
+  .pt-safe {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
+  }
+  /* 右：モバイルだけFABぶんの余白（約7rem） */
+  .pr-fab {
+    padding-right: 7rem;
+  }
+  @media (min-width: 640px) {
+    .pr-fab { padding-right: 0; }  /* 画面が広ければ余白不要 */
+  }
+}
+
+/* iOS notch 対応の上側パディング */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* 右上の丸ボタン群の高さぶんも足す（72px は必要に応じて調整） */
+.pt-top-actions {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 95px);
+}
+
+/* ==== Audio seek range ==== */
+.range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(255,255,255,.25);
+  cursor: pointer;
+}
+.range:disabled { opacity: .5; }
+
+/* WebKit thumb (iOS/Safari) */
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #6366f1;              /* indigo-500 */
+  border: 2px solid #818cf8;         /* indigo-400 */
+  box-shadow: 0 0 0 3px rgba(99,102,241,.25);
+  margin-top: -6px; /* トラック中央に */
+}
+
+/* Firefox */
+.range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #6366f1;
+  border: 2px solid #818cf8;
+}
+.range::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(255,255,255,.25);
+}
+
+:root{
+  --bottom-nav-h: 48px;   /* 下ナビの高さ（GlobalNavbarの値と一致させる） */
+  --player-gap: 0px;      /* ナビとプレイヤーの隙間。ピタ付けなら 0px でもOK */
+}
+
+@media (min-width:640px){
+  :root{ --player-gap: 8px; }
+}
+
+@layer utilities {
+  /* 右上の丸ボタン分 + Safe Area を確保（モバイル） */
+  .pt-top-actions {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 72px);
+  }
+}

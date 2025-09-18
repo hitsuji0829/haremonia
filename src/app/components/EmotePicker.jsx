@@ -17,20 +17,20 @@ export default function EmotePicker({ trackId, timestampSeconds, onClose, layerR
   const {addLocalEmote} = useAudioPlayer();
 
   const calcAnchorPercentPos = () => {
-    if (!layerRef?.current || anchorRef?.current) return null;
+    if (!layerRef?.current || !anchorRef?.current) return null;
     const layer = layerRef.current.getBoundingClientRect();
-    const anchor =anchorRef.current.getBoundingClientRect();
+    const anchor = anchorRef.current.getBoundingClientRect();
 
     const cx = anchor.left + anchor.width / 2;
-    const cy = anchor.top;
+    const cy = anchor.top; // ボタンの上辺
+
     let xPct = ((cx - layer.left) / layer.width) * 100;
     let yPct = ((cy - layer.top) / layer.height) * 100 - 6;
 
     xPct = Math.max(5, Math.min(95, xPct));
     yPct = Math.max(5, Math.min(95, yPct));
-
     return { xPct, yPct };
-  }
+  };
 
   console.log(`[EmotePicker Render] trackId: ${trackId}, timestampSeconds: ${timestampSeconds}, onClose: ${typeof onClose}`);
 
@@ -38,7 +38,7 @@ export default function EmotePicker({ trackId, timestampSeconds, onClose, layerR
   const handleEmoteClick = async (emoji) => {
     if (loading || cooldown) return; // 投稿中またはクールダウン中は操作不可
 
-    setLoading(true); // 投稿開始
+      Loading(true); // 投稿開始
     setCooldown(true); // クールダウン開始
     const pos = calcAnchorPercentPos();
     const ts = Number.isFinite(timestampSeconds) ? timestampSeconds : 0;
@@ -74,18 +74,16 @@ export default function EmotePicker({ trackId, timestampSeconds, onClose, layerR
   };
 
   return (
-    // position: absolute で親要素 (GlobalAudioPlayer の Fragment) に対して配置
-    // bottom-[9rem] はグローバルプレイヤーの上端に配置 (16+20=36 Tailwind単位 = 144px)
-    // z-50 は他の固定要素の上に表示されるように
-    <div className="absolute bottom-full left-1/2 -translate-x-1/2 translate-x-73 mb-2 bg-gray-700 rounded-lg shadow-lg z-50">
+    <div className="bg-gray-700 rounded-lg shadow-lg p-2">
       <div className="flex space-x-2">
-        {EMOTES.map((emoji, index) => (
+        {EMOTES.map((emoji) => (
           <button
-            key={index}
+            key={emoji}
             onClick={() => handleEmoteClick(emoji)}
-            className={`text-2xl p-2 rounded-full hover:bg-gray-600 transition-colors duration-200
-              ${loading || cooldown ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={loading || cooldown} // ロード中またはクールダウン中は無効化
+            className={`text-2xl p-2 rounded-full hover:bg-gray-600 transition-colors duration-200 ${
+              loading || cooldown ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            disabled={loading || cooldown}
             aria-label={`${emoji} エモートを送信`}
           >
             {emoji}
@@ -93,8 +91,8 @@ export default function EmotePicker({ trackId, timestampSeconds, onClose, layerR
         ))}
       </div>
       {(loading || cooldown) && (
-        <div className="text-center text-xs text-gray-400 mt-2">
-          {loading ? '送信中...' : `クールダウン中 (${COOLDOWN_TIME / 1000}秒)`}
+        <div className="text-center text-xs text-gray-300 mt-2">
+          {loading ? '送信中…' : `クールダウン中 (${COOLDOWN_TIME / 1000}秒)`}
         </div>
       )}
     </div>

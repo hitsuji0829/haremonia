@@ -78,7 +78,11 @@ rikuto.hitsujikai@gmail.com`,
       },
       {
         q: 'リピート再生はできますか？',
-        a: `現段階では未実装です。なるべく多くの楽曲をお楽しみください。`,
+        a: `楽曲を指定して再生した場合のみリピート再生されます。シャッフル再生時は適用されません。`,
+      },
+      {
+        q: 'バックグラウンド再生はできますか？',
+        a: `可能です。スマートフォンやPCのウェブプレイヤーにも対応しており、そちらでの再生・停止や楽曲の移動も可能です。`,
       },
     ],
   },
@@ -215,12 +219,6 @@ export default function SettingsFaqPage() {
     <main className="p-4 max-w-3xl mx-auto mb-40 text-gray-100">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold">FAQ</h1>
-        <Link
-          href="/settings"
-          className="rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-sm hover:bg-gray-700"
-        >
-          設定に戻る
-        </Link>
       </div>
 
       <div className="mb-6">

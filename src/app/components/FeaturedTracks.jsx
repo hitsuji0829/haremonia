@@ -32,12 +32,12 @@ export default function FeaturedTracks({ tracks = [] }) {
             />
 
             <div className="min-w-0">
-              <div className="font-semibold text-gray-900 truncate">{t.title}</div>
+              <div className="font-semibold text-gray-900 truncate select-none">{t.title}</div>
 
               <div className="text-sm text-gray-600 truncate">
                 {/* アーティスト名リンク */}
                 {t.artist_id ? (
-                  <Link href={`/artists/${t.artist_id}`} className="underline hover:text-indigo-600">
+                  <Link href={`/artists/${t.artist_id}`} className="underline hover:text-indigo-600 select-none">
                     {t.artist_name}
                   </Link>
                 ) : (
@@ -50,7 +50,7 @@ export default function FeaturedTracks({ tracks = [] }) {
                     <span className="text-gray-400"> · </span>
                     <Link
                       href={`/artists/${t.artist_id}#work-${t.work_id}`}
-                      className="text-xs underline hover:text-indigo-600"
+                      className="text-xs underline hover:text-indigo-600 select-none"
                     >
                       {t.work_title}
                     </Link>

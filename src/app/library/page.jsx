@@ -216,9 +216,17 @@ export default function LibraryPage() {
             {(favorites.tracks || []).length > 0 ? (
               <div className="space-y-2">
                 {favorites.tracks.map((track, idx) => (
-                  <button
+                  <div
                     key={track.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleTrackClick(track, idx)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleTrackClick(track, idx);
+                      }
+                    }}
                     className={`w-full text-left bg-white rounded-xl shadow-md p-4 flex items-center gap-4 hover:bg-gray-50 transition
                                 ${currentTrack?.id === track.id ? 'ring-2 ring-indigo-500' : ''}`}
                   >
@@ -235,10 +243,9 @@ export default function LibraryPage() {
                       </span>
                     </div>
 
-                    {/* 秒 → m:ss */}
                     <span className="text-sm text-gray-500 select-none">{toMMSS(track.duration)}</span>
 
-                    {/* お気に入りボタンはクリック伝播を止めて再生を阻害しない */}
+                    {/* お気に入りボタン */}
                     <div onClick={(e) => e.stopPropagation()}>
                       <FavoriteButton
                         trackId={track.id}
@@ -246,7 +253,7 @@ export default function LibraryPage() {
                         onFavoriteRemoved={handleFavoriteRemoved}
                       />
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             ) : (

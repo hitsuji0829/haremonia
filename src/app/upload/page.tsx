@@ -82,6 +82,17 @@ export default function UploadPage() {
   const [issuedCode, setIssuedCode] = useState<string | null>(null);
   const [issuedArtistId, setIssuedArtistId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [audioErr, setAudioErr] = useState<string>('');
+
+
+  const MAX_AUDIO_FILE_SIZE = 70 * 1024 * 1024; // 70MB
+  const ALLOWED_AUDIO_TYPES = [
+    'audio/mpeg','audio/mp3','audio/wav','audio/x-wav',
+    'audio/flac','audio/aac','audio/mp4','audio/ogg'
+  ];
+
+// 表示用
+const fmtMB = (b: number) => Math.round(b / 1024 / 1024);
 
   const artistNamePreview = useMemo(() => {
     if (selectedArtistId) {
@@ -231,6 +242,17 @@ async function uploadToStorage(
       setMsg('曲タイトルと音源ファイルは必須です。');
       return;
     }
+    if (audioFile.size > MAX_AUDIO_FILE_SIZE) {
+      setAudioErr(`ファイルが大きすぎます（${fmtMB(audioFile.size)}MB）。${fmtMB(MAX_AUDIO_FILE_SIZE)}MB 以下にしてください。`);
+      setMsg('音源ファイルのサイズ上限を超えています。');
+      return;
+    }
+    if (ALLOWED_AUDIO_TYPES.length && !ALLOWED_AUDIO_TYPES.includes(audioFile.type)) {
+      setAudioErr('対応していないファイル形式です。mp3 / wav / flac / aac / mp4 / ogg を選んでください。');
+      setMsg('音源ファイルの形式が非対応です。');
+      return;
+    }
+
 
         // ★ 既存アーティストのときは編集キー検証
     if (selectedArtistId) {
@@ -293,22 +315,24 @@ async function uploadToStorage(
           artistId = existing.id;
         } else {
           // いなければ初めて作成
-          const artistImageUrl = await uploadToStorage('artist-images', artistImageFile!);
+          artistImageUrl = await uploadToStorage('artist-images', artistImageFile!);
 
           const editCode = generateEditCode(10);
           const editCodeHash = await sha256Hex(editCode);
-
           const { data: insertedArtist, error: aErr } = await supabase
             .from('artists')
             .insert({
               name: nameTrim,
               bio: newArtistBio || null,
               image_url: artistImageUrl,
-              edit_code_hash: editCodeHash,
+              edit_code_plain: editCode,
+              edit_code_hash: editCodeHash   // ★ 平文を直接保存
+              // edit_code_hash は DB のトリガーが自動生成
             })
             .select('id')
             .single();
-          if (aErr) throw aErr;
+          if (aErr) throw new Error(`[artists.insert] ${aErr.message}`);
+          console.log('[artists.insert] OK:', insertedArtist);
 
           artistId = insertedArtist.id;
 
@@ -332,7 +356,9 @@ async function uploadToStorage(
         .insert({ title: titleForWork, artist_id: artistId, jacket_url })
         .select('id')
         .single();
-      if (wErr) throw wErr;
+      if (wErr) throw new Error(`[works.insert] ${wErr.message}`);
+      console.log('[works.insert] OK:', insertedWork);
+
       const workId = insertedWork.id;
 
       // 4) 音源アップロード（必須）
@@ -353,7 +379,8 @@ async function uploadToStorage(
         composer,
         arranger,
       });
-      if (tErr) throw tErr;
+      if (tErr) throw new Error(`[tracks.insert] ${tErr.message}`);
+      console.log('[tracks.insert] OK');
 
       setMsg('投稿に成功しました！');
       // リセット
@@ -443,7 +470,7 @@ async function uploadToStorage(
                 required={selectedArtistId === ''}
                 file={artistImageFile}
                 error={artistImgErr}
-                helper="※ 1600×1600px以上の正方形画像を選んでください"
+                helper="1600×1600px以上の正方形画像を選んでください。※推奨：png/jpeg"
                 onChange={async (f) => {
                   setArtistImageFile(f);
                   setArtistImgErr('');
@@ -490,7 +517,7 @@ async function uploadToStorage(
             value={workTitle}
             onChange={(e) => setWorkTitle(e.target.value)}
             className="w-full rounded-md p-2 bg-white text-gray-900"
-            placeholder="例) Haremonia"
+            placeholder="例) HAREmonia"
           />
         </div>
 
@@ -503,7 +530,7 @@ async function uploadToStorage(
             value={trackTitle}
             onChange={(e) => setTrackTitle(e.target.value)}
             className="w-full rounded-md p-2 bg-white text-gray-900"
-            placeholder="例) Haremonia's Song"
+            placeholder="例) HAREmonia's Song (feat.HARE Taro)"
           />
         </div>
 
@@ -517,7 +544,7 @@ async function uploadToStorage(
               value={lyricist}
               onChange={(e) => setLyricist(e.target.value)}
               className="w-full rounded-md p-2 bg-white text-gray-900"
-              placeholder="例) Hare Taro"
+              placeholder="例) HARE Taro"
             />
           </div>
           <div>
@@ -528,7 +555,7 @@ async function uploadToStorage(
               value={composer}
               onChange={(e) => setComposer(e.target.value)}
               className="w-full rounded-md p-2 bg-white text-gray-900"
-              placeholder="例) Hare Hanako"
+              placeholder="例) HARE Hanako"
             />
           </div>
           <div>
@@ -539,14 +566,14 @@ async function uploadToStorage(
               value={arranger}
               onChange={(e) => setArranger(e.target.value)}
               className="w-full rounded-md p-2 bg-white text-gray-900"
-              placeholder="例) Hare Yukai"
+              placeholder="例) HARE Yukai"
             />
           </div>
         </div>
 
         {/* 歌詞（任意） */}
         <div>
-          <label className="block text-sm text-gray-200">歌詞（任意）</label>
+          <label className="block text-sm text-gray-200">歌詞（任意）※適宜改行してください。</label>
           <textarea
             value={lyrics}
             onChange={(e) => setLyrics(e.target.value)}
@@ -578,7 +605,7 @@ async function uploadToStorage(
           required
           file={jacketFile}
           error={jacketImgErr}
-          helper="※ 1600×1600px以上の正方形画像を選んでください"
+          helper="※ 1600×1600px以上の正方形画像を選んでください。※推奨：png/jpeg"
           onChange={async (f) => {
             setJacketFile(f);
             setJacketImgErr('');
@@ -596,8 +623,31 @@ async function uploadToStorage(
           accept="audio/*"
           required
           file={audioFile}
-          error={''}
-          onChange={(f) => setAudioFile(f)}
+          error={audioErr}
+          helper={`最大サイズは ${fmtMB(MAX_AUDIO_FILE_SIZE)}MB です。※推奨：mp3/wav`}
+          onChange={(f) => {
+            setAudioErr('');
+            setMsg('');
+            if (!f) { setAudioFile(null); return; }
+
+            // サイズチェック
+            if (f.size > MAX_AUDIO_FILE_SIZE) {
+              setAudioFile(null);
+              setAudioErr(`ファイルが大きすぎます（${fmtMB(f.size)}MB）。${fmtMB(MAX_AUDIO_FILE_SIZE)}MB 以下にしてください。`);
+              setMsg('音源ファイルのサイズ上限を超えています。');
+              return;
+            }
+
+            // 形式チェック（拡張したければ ALLOWED_AUDIO_TYPES を増やす）
+            if (ALLOWED_AUDIO_TYPES.length && !ALLOWED_AUDIO_TYPES.includes(f.type)) {
+              setAudioFile(null);
+              setAudioErr('対応していないファイル形式です。mp3 / wav / flac / aac / mp4 / ogg を選んでください。');
+              setMsg('音源ファイルの形式が非対応です。');
+              return;
+            }
+
+            setAudioFile(f);
+          }}
         />
 
         <button

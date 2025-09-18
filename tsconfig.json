@@ -37,7 +37,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-, "src/app/artists/[id]/page.js", "src/app/artists/[id]/page.js"  ],
+, "src/app/artists/[id]/page.js", "src/app/artists/[id]/page.js", "src/app/components/EmoteOverlay.jsx", "src/app/community/_components/ProfileEditor.jsx"  ],
   "exclude": [
     "node_modules"
   ]

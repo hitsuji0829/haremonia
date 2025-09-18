@@ -64,7 +64,37 @@ export default function CommentSection({ artistId }) {
           .from('profiles')
           .select('*')
           .eq('id', currentUser.id)
-          .single();
+          .maybeSingle();
+
+          try {
+            const savedCode = localStorage.getItem(`profile_signin_code_uid_${currentUser.id}`);
+            if ((!profileData || !profileData.username) && savedCode) {
+              // キーで元プロフィールを探す（同一キーは1レコード想定）
+              const { data: source } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('signin_code_plain', savedCode)
+                .maybeSingle();
+
+              if (source && source.username) {
+                const claimed = {
+                  id: currentUser.id,
+                  username: source.username,
+                  avatar_url: source.avatar_url ?? null,
+                  signin_code_plain: source.signin_code_plain,
+                };
+                await supabase.from('profiles').delete().eq('id', found.id);
+                await supabase.from('profiles').upsert(claimed, { onConflict: 'id' });
+                setProfile(claimed);
+              } else {
+                setProfile(profileData ?? null);
+              }
+            } else {
+              setProfile(profileData ?? null);
+            }
+          } catch {
+            setProfile(profileData ?? null);
+          }
 
         if (profileError && profileError.code !== 'PGRST116') {
           console.error('プロフィール取得エラー:', profileError);
@@ -144,7 +174,7 @@ export default function CommentSection({ artistId }) {
                   .from('profiles')
                   .select('username, avatar_url')
                   .eq('id', newCommentData.user_id)
-                  .single()
+                  .maybeSingle()
                   .then(({ data: profileData, error: profileError }) => {
                     if (!profileError && profileData) {
                       setComments((prevComments) => [
@@ -193,6 +223,10 @@ export default function CommentSection({ artistId }) {
     setPosting(true);
     setPostLimitExceeded(false);
 
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) { alert('サインインしてください'); setPosting(false); return; }
+    await supabase.from('profiles').upsert({ id: authUser.id }, { onConflict: 'id' });
+
     let userIdToPost = user.id;
     let currentDailyCount = profile?.daily_post_count || 0;
     let lastPostDateTime = profile?.last_post_date;
@@ -232,6 +266,7 @@ export default function CommentSection({ artistId }) {
         artist_id: artistId,
         user_id: userIdToPost,
         anonymous_id: null, // 匿名投稿は不可なので常にnull
+        user_id: user.id,
         content: newComment.trim(),
       },
     ]);
@@ -239,6 +274,8 @@ export default function CommentSection({ artistId }) {
     if (error) {
       console.error('コメント投稿エラー:', error);
       alert('コメントの投稿に失敗しました。');
+      console.error(JSON.stringify(error, null, 2));
+      console.groupEnd();
     } else {
       setNewComment('');
     }
@@ -261,15 +298,16 @@ export default function CommentSection({ artistId }) {
 
   const handleAnonymousSignIn = async () => {
     setLoadingAuth(true);
-    const { data, error } = await supabase.auth.signInAnonymously();
+    const { data: { user }, error } = await supabase.auth.signInAnonymously();
     if (error) {
       console.error('匿名サインインエラー:', error);
       alert('サインインに失敗しました。');
     } else {
-      alert('匿名アカウントでサインインしました！プロフィールを設定できます。');
+      alert('匿名アカウントでサインインしました。プロフィール画面で「新規作成」または「ログイン」してください。');
     }
     setLoadingAuth(false);
   };
+
 
   const handleProfileUpdated = (updatedProfile) => {
     setProfile(updatedProfile);
@@ -301,7 +339,7 @@ export default function CommentSection({ artistId }) {
 
   // コメントフォームのdisabled状態を決定
   // ユーザーが認証済み (userが存在) かつ、プロフィールが存在 (profileが存在) する場合にのみ有効
-  const isCommentFormDisabled = posting || loadingAuth || postLimitExceeded || !user || !profile; 
+  const isCommentFormDisabled = posting || loadingAuth || postLimitExceeded || !user || !profile || !profile?.username;
 
   console.log('--- CommentSection Render ---');
   console.log('CommentSection: comments state value:', comments);
@@ -341,7 +379,7 @@ export default function CommentSection({ artistId }) {
       <form onSubmit={handleSubmitComment} className="mb-8">
         <textarea
           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 resize-y min-h-[80px] text-gray-900"
-          placeholder={user && profile ? "コメントを投稿..." : "プロフィールを設定してください"} // プレースホルダーを変更
+          placeholder={user && profile && profile.username ? "コメントを投稿..." : "ユーザー名を設定してください"}
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           disabled={isCommentFormDisabled} // disabled状態を適用
@@ -360,9 +398,10 @@ export default function CommentSection({ artistId }) {
         </button>
         {loadingAuth && <p className="text-gray-500 text-sm mt-2">認証状態を確認中...</p>}
         {/* ユーザーが未認証またはプロフィール未設定の場合のメッセージ */}
-        {(!user || !profile) && !loadingAuth && ( 
+        {(!user || !profile || !profile?.username) && !loadingAuth && (
           <p className="text-gray-600 text-sm mt-2">
-            コメントを投稿するには、上記の「プロフィールを設定する」ボタンから登録し、プロフィールを保存してください。メールアドレス等の個人情報登録は不要です。
+            コメントを投稿するには、上記の「プロフィールを設定する」から
+            <b>ユーザー名を保存</b>してください。（名無しでは投稿できません）
           </p>
         )}
       </form>

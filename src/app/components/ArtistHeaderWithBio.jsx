@@ -17,18 +17,32 @@ export default function ArtistHeaderWithBio({ name, imageUrl, bio, artistId, soc
 
   const hasBio = !!bio && bio.trim().length > 0;
 
+  const nameLen =(name ?? '').length;
+  const nameSizeClass =
+    nameLen <= 3 ? 'text-3xl' :
+    nameLen <= 8 ? 'text-2xl' :
+    nameLen <= 10 ? 'text-xl'  :
+                    'text-lg';
+
   return (
     <div className="mb-8">
       {/* ヘッダ */}
-      <div className="flex items-center gap-6 p-4 bg-white rounded-xl shadow-md">
+      <div className="flex items-center gap-6 p-4 bg-white rounded-xl shadow-md select-none">
         <ImageWithFallback
           src={imageUrl}
           alt={name || 'アーティスト'}
-          className="w-24 h-24 object-cover rounded-full shadow-lg flex-shrink-0 select-none"
+          className="w-14 h-14 sm:w-24 sm:h-24 rounded-full object-cover flex-shrink-0 select-none"
           fallbackSrc="https://placehold.co/100x100/aaaaaa/ffffff?text=Artist"
         />
-        <div className="flex-1 min-w-0">
-          <h1 className="text-3xl font-extrabold text-gray-900 truncate select-none">{name}</h1>
+        <div className="min-w-0 flex-1"> {/* ← 重要：親に余白を与える */}
+          <h1
+            className={`${nameSizeClass} sm:text-4xl font-extrabold leading-tight text-gray-800
+                        whitespace-normal break-words [overflow-wrap:anywhere]
+                        line-clamp-2 sm:line-clamp-1`}
+            title={name}
+          >
+            {name}
+          </h1>
         </div>
 
         <div className="ml-auto flex items-center gap-2">
@@ -209,62 +223,92 @@ function EditArtistModal({ initialBio, initialSocials, artistId, editCode, onClo
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center">
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
+      {/* 背景 */}
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative w-full max-w-lg rounded-xl bg-gray-900 p-5 shadow-xl border border-gray-800 text-gray-100">
-        <h3 className="text-lg font-bold mb-4 text-gray-100">プロフィールを編集</h3>
 
-        <label className="block text-sm text-gray-300 mb-1">プロフィール（300字以内）</label>
-        <textarea
-            rows={4}
+      {/* パネル（モバイルは下からのシート風） */}
+      <div
+        className="
+          relative w-full sm:max-w-lg rounded-t-2xl sm:rounded-xl
+          bg-gray-900 shadow-xl border border-gray-800 text-gray-100
+          flex flex-col
+          max-h-[min(92svh,720px)] sm:max-h-[80vh]
+        "
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        {/* ヘッダー */}
+        <div className="px-4 sm:px-5 pt-3 pb-2 sm:pt-4 sm:pb-3 border-b border-gray-800">
+          <h3 className="text-base sm:text-lg font-bold">プロフィールを編集</h3>
+        </div>
+
+        {/* スクロール領域 */}
+        <div className="px-4 sm:px-5 py-3 overflow-y-auto">
+          <label className="block text-xs sm:text-sm text-gray-300 mb-1">プロフィール（300字以内）</label>
+          <textarea
+            rows={3}
             value={bio}
             onChange={(e) => setBio(e.target.value.slice(0, 300))}
-            className="w-full rounded-md border border-gray-700 bg-gray-800 text-gray-100 placeholder-gray-500 p-3 mb-3
-                    focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full rounded-md border border-gray-700 bg-gray-800 text-gray-100 placeholder-gray-500 p-2 sm:p-3 mb-1
+                      focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
             placeholder="自己紹介など"
-        />
-        <div className="text-right text-xs text-gray-400 mb-3">{bio.length}/300</div>
+          />
+          <div className="text-right text-[11px] sm:text-xs text-gray-400 mb-3">{bio.length}/300</div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Input label="X（@またはURL）"        value={socials.x}         onChange={(v) => setSocials(s => ({ ...s, x: v }))} />
-          <Input label="Instagram（@またはURL）" value={socials.instagram} onChange={(v) => setSocials(s => ({ ...s, instagram: v }))} />
-          <Input label="TikTok（@またはURL）"    value={socials.tiktok}    onChange={(v) => setSocials(s => ({ ...s, tiktok: v }))} />
-          <Input label="YouTube（URL）"          value={socials.youtube}   onChange={(v) => setSocials(s => ({ ...s, youtube: v }))} />
-          <Input label="Webサイト（URL）"        value={socials.site}      onChange={(v) => setSocials(s => ({ ...s, site: v }))} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+            <Input label="X（@またはURL）"        value={socials.x}         onChange={(v)=>setSocials(s=>({...s,x:v}))} />
+            <Input label="Instagram（@またはURL）" value={socials.instagram} onChange={(v)=>setSocials(s=>({...s,instagram:v}))} />
+            <Input label="TikTok（@またはURL）"    value={socials.tiktok}    onChange={(v)=>setSocials(s=>({...s,tiktok:v}))} />
+            <Input label="YouTube（URL）"          value={socials.youtube}   onChange={(v)=>setSocials(s=>({...s,youtube:v}))} />
+            <Input label="Webサイト（URL）"        value={socials.site}      onChange={(v)=>setSocials(s=>({...s,site:v}))} />
+          </div>
+
+          <p className="mt-2 text-[11px] sm:text-xs text-gray-400">
+            ※「@handle」でも「https://…」でもOK。表示時に自動でリンク化されます。
+          </p>
+
+          {error && <p className="text-sm text-red-400 mt-3">{error}</p>}
         </div>
-        <p className="mt-2 text-xs text-gray-400">
-          ※「@handle」でも「https://…」でもOK。表示時に自動でリンク化されます。
-        </p>
 
-        {error && <p className="text-sm text-red-400 mt-3">{error}</p>}
-
-        <div className="mt-5 flex gap-3">
-            <button
+        {/* フッター（常に見える） */}
+        <div
+          className="
+            sticky bottom-0 px-4 sm:px-5 pt-2 pb-3
+            bg-gray-900/95 backdrop-blur border-t border-gray-800
+            flex gap-2 sm:gap-3
+          "
+          style={{ paddingBottom: `calc(env(safe-area-inset-bottom,0px) + 10px)` }}
+        >
+          <button
             onClick={onClose}
-            className="flex-1 rounded-md border border-gray-700 bg-gray-800 text-gray-100 px-4 py-2 hover:bg-gray-700"
-            >閉じる</button>
-            <button
+            className="flex-1 h-10 rounded-md border border-gray-700 bg-gray-800 text-gray-100 text-sm hover:bg-gray-700"
+          >
+            閉じる
+          </button>
+          <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 rounded-md bg-indigo-600 text-white px-4 py-2 disabled:opacity-60 hover:bg-indigo-500"
-            >{saving ? '保存中…' : '保存'}</button>
+            className="flex-1 h-10 rounded-md bg-indigo-600 text-white text-sm hover:bg-indigo-500 disabled:opacity-60"
+          >
+            {saving ? '保存中…' : '保存'}
+          </button>
         </div>
-        </div>
-
+      </div>
     </div>
   );
+
 }
 
 function Input({ label, value, onChange }) {
   return (
     <label className="block">
-      <span className="block text-sm text-gray-300 mb-1">{label}</span>
+      <span className="block text-xs sm:text-sm text-gray-300 mb-1">{label}</span>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-gray-700 bg-gray-800 text-gray-100 placeholder-gray-500 p-3
-                   focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        className="w-full rounded-md border border-gray-700 bg-gray-800 text-gray-100 placeholder-gray-500 p-2 sm:p-3
+                   focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
       />
     </label>
   );

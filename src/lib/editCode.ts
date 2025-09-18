@@ -14,3 +14,12 @@ export async function sha256Hex(text: string) {
   const hash = await crypto.subtle.digest('SHA-256', data);
   return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
+
+export function generateUserSignInCode(length: number = 10): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}

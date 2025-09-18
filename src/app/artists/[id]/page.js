@@ -11,7 +11,7 @@ import ArtistHeaderWithBio from '@/components/ArtistHeaderWithBio';
 
 
 export default async function ArtistPage({ params }) {
-  const { id } = params;
+  const { id } = await params;
 
   console.log('--- ArtistPage Server Component Render ---');
   console.log('取得しようとしているアーティストID:', id);
@@ -71,7 +71,7 @@ export default async function ArtistPage({ params }) {
 
 
   return (
-  <main className="p-4 max-w-4xl mx-auto mb-40">
+  <main className="p-4 max-w-4xl mx-auto mb-40 pt-top-actions">
     {/* アーティストのカバー画像と名前 */}
     <ArtistHeaderWithBio
       name={artist.name}
@@ -100,18 +100,20 @@ export default async function ArtistPage({ params }) {
     {works.length > 0 ? (
       worksWithArtistInfo.map(work => (
         <div key={work.id} className="mb-8 rounded-xl shadow-lg overflow-hidden bg-white">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6"> 
+          <div className="flex items-center gap-4 p-3 sm:flex-row sm:items-start sm:gap-6 sm:p-6"> 
             <ImageWithFallback
               src={work.jacket_url}
               alt={work.title || "作品のジャケット"}
-              className="w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg shadow-md flex-shrink-0 select-none"
+              className="w-16 h-16 sm:w-48 sm:h-48 object-cover rounded-lg shadow-md flex-shrink-0 select-none"
               fallbackSrc="https://placehold.co/200x200/cccccc/333333?text=No+Image"
             />
-            <div className="text-center sm:text-left flex-grow">
-              <h2 className="text-2xl font-bold text-gray-800 mb-1 select-none">{work.title}</h2>
-              <p className="text-base text-gray-600 select-none">{artist.name}</p>
+            <div className="flex-1 min-w-0 text-left">
+              <h2 className="text-lg sm:text-2xl font-bold text-gray-800 mb-0.5 sm:mb-1 line-clamp-2 break-words select-none">{work.title}</h2>
+              <p className="text-sm sm:text-base text-gray-600 line-clamp-2 break-words select-none">{artist.name}</p>
             </div>
-            <FavoriteButton workId={work.id} />
+            <div className="ml-2 sm:ml-0 shrink-0">
+              <FavoriteButton workId={work.id} />
+            </div>
           </div>
           <TrackList tracks={work.tracks || []} />
         </div>

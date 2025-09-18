@@ -7,7 +7,7 @@ import FavoriteButton from '@/components/FavoriteButton';
 import { formatDuration } from '@/lib/formatDuration';
 
 export default function TrackList({ tracks }) {
-  const { currentTrack, isPlaying, playTrack, togglePlayPause } = useAudioPlayer(); // ★ togglePlayPauseを使う
+  const { currentTrack, isPlaying, playTrack, togglePlayPause } = useAudioPlayer();
 
   if (!tracks || tracks.length === 0) {
     return (
@@ -17,7 +17,6 @@ export default function TrackList({ tracks }) {
     );
   }
 
-  // 行クリック時の挙動（同じ曲なら一時停止/再開、別曲ならその曲を再生）
   const handleRowClick = (track, index) => {
     if (currentTrack?.id === track.id) {
       togglePlayPause?.();
@@ -26,7 +25,6 @@ export default function TrackList({ tracks }) {
     }
   };
 
-  // キーボード操作 (Enter / Space)
   const handleRowKeyDown = (e, track, index) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -44,9 +42,9 @@ export default function TrackList({ tracks }) {
         return (
           <div
             key={track.id}
-            role="button"                              // ★ アクセシビリティ
+            role="button"
             tabIndex={0}
-            onClick={() => handleRowClick(track, index)}      // ★ 行全体クリック
+            onClick={() => handleRowClick(track, index)}
             onKeyDown={(e) => handleRowKeyDown(e, track, index)}
             className="
               flex items-center gap-4 p-4 rounded-lg mb-2
@@ -55,28 +53,32 @@ export default function TrackList({ tracks }) {
               outline-none focus:ring-2 focus:ring-indigo-400
             "
           >
-            {/* 先頭の再生アイコン（クリックしなくても行で反応する） */}
-            <span className="text-indigo-600 text-lg select-none">
+            {/* 左：再生/一時停止のアイコン（行全体で反応する） */}
+            <span className="text-indigo-600 text-lg select-none shrink-0">
               {isCurrent && isPlaying ? '⏸' : '▶'}
             </span>
 
-            <span className="font-medium text-gray-700 select-none w-8 text-right">
-              {index + 1}.
-            </span>
+            {/* ★ 中央：タイトル（番号は削除・1行省略） */}
+            <div className="min-w-0 flex-1">
+              <span
+                className="block min-w-0 leading-snug text-gray-800 text-base font-medium
+                           whitespace-nowrap overflow-hidden text-ellipsis select-none"
+                title={track.title}
+              >
+                {track.title}
+              </span>
+            </div>
 
-            <span className="flex-grow text-gray-800 select-none truncate">
-              {track.title}
-            </span>
-
-            <span className="text-sm text-gray-500 select-none">
+            {/* 右：再生時間（とても小さい画面で隠したい場合は hidden sm:inline に） */}
+            <span className="text-sm text-gray-500 select-none shrink-0">
               {formatDuration(track.duration)}
             </span>
 
-            {/* ★ ここだけクリックを無効化（行クリックに伝播させない） */}
+            {/* さらに右：お気に入り（行クリックに伝播させない） */}
             <div
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
-              className="ml-1"
+              className="ml-1 shrink-0"
             >
               <FavoriteButton trackId={track.id} />
             </div>

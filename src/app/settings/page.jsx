@@ -2,12 +2,11 @@
 
 import React from 'react';
 import { useAudioPlayer } from '@/context/AudioPlayerContext';
-import { useSettings } from '../context/SettingsContext';
+import { useSettings } from '@/context/SettingsContext';
 import Link from 'next/link';
 
 export default function SettingsPage() {
-  const { emotesEnabled, toggleEmotes } = useAudioPlayer(); // ← 追加
-  const { showEmotes, setShowEmotes, emoteOpacity, setEmoteOpacity, shuffleArtistVisible, setShuffleArtistVisible} = useSettings();
+  const { showEmotes, setShowEmotes, emoteOpacity, setEmoteOpacity, hideArtistWorkInPlayer, setHideArtistWorkInPlayer} = useSettings();
 
   return (
     <main className="p-4 max-w-4xl mx-auto min-h-screen mb-40">
@@ -82,17 +81,17 @@ export default function SettingsPage() {
             <button
                 type="button"
                 role="switch"
-                aria-checked={shuffleArtistVisible}
-                onClick={() => setShuffleArtistVisible(!shuffleArtistVisible)}
+                aria-checked={hideArtistWorkInPlayer}
+                onClick={() => setHideArtistWorkInPlayer(!hideArtistWorkInPlayer)}
                 className={`relative h-7 w-12 shrink-0 rounded-full transition-colors duration-200
-                ${shuffleArtistVisible ? 'bg-indigo-600' : 'bg-gray-300'}
+                ${hideArtistWorkInPlayer ? 'bg-indigo-600' : 'bg-gray-300'}
                 focus:outline-none focus:ring-2 focus:ring-indigo-400/60`}
             >
                 <span className="sr-only">アーティスト名・作品名の表示</span>
                 <span
                 className={`absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow
                     transition-transform duration-200 will-change-transform
-                    ${shuffleArtistVisible ? 'translate-x-5' : 'translate-x-0'}`}
+                    ${hideArtistWorkInPlayer ? 'translate-x-5' : 'translate-x-0'}`}
                 />
             </button>
         </div>

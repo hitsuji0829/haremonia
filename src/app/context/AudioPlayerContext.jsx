@@ -167,6 +167,18 @@ export function AudioPlayerProvider({ children }) {
     }
   };
 
+  const setQueueAndPlay = useCallback((tracks = [], startIndex = 0, origin = 'unknown') => {
+    if (!Array.isArray(tracks) || tracks.length === 0) return;
+    const start = Math.min(Math.max(0, startIndex), tracks.length - 1);
+    playTrack(tracks[start], tracks, start, { playbackOrigin: origin });
+  }, [playTrack]);
+
+  // 単曲だけ渡して即再生（内部で1曲だけのキューにする）
+  const setTrackAndPlay = useCallback((track, origin = 'unknown') => {
+    if (!track) return;
+    setQueueAndPlay([track], 0, origin);
+  }, [setQueueAndPlay]);
+
   const markOriginArtist = () => setPlaybackOrigin('artist');
   const markOriginShuffle = () => setPlaybackOrigin('shuffle');
 
@@ -197,7 +209,7 @@ export function AudioPlayerProvider({ children }) {
       audio.currentTime =0;
       const SUPPRESS_MS = 5000;
       setEmoteSuppressUntilMs(Date.now() + SUPPRESS_MS);
-      setEmoteRestartNonce(n => N + 1);
+      setEmoteRestartNonce(n => n + 1);
       setCurrentTime(0);
       if (!isPlaying && currentTrack?.audio_url){
         audio.play().catch(err => console.error('先頭再生エラー:', err));
@@ -232,6 +244,103 @@ export function AudioPlayerProvider({ children }) {
     }
   };
 
+  function applyMediaSession(track, audioEl, { hasPrev, hasNext } = {}) {
+    if (!('mediaSession' in navigator) || !track || !audioEl) return;
+
+    // 曲情報
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title:  track.title || 'Unknown Title',
+      artist: track.artist_name || track.artist?.name || 'Unknown Artist',
+      album:  track.work_title || track.work?.title || '',
+      artwork: track.jacket_url ? [
+        { src: track.jacket_url, sizes: '96x96',  type: 'image/png' },
+        { src: track.jacket_url, sizes: '192x192', type: 'image/png' },
+        { src: track.jacket_url, sizes: '512x512', type: 'image/png' },
+      ] : [],
+    });
+
+    // OS 側のプレイヤーボタンに対応
+    navigator.mediaSession.setActionHandler('play',        () => audioEl.play());
+    navigator.mediaSession.setActionHandler('pause',       () => audioEl.pause());
+    navigator.mediaSession.setActionHandler('previoustrack', playPrevTrack);
+    navigator.mediaSession.setActionHandler('nexttrack',     playNextTrack);
+    const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isiOS && (hasPrev || hasNext)) {
+      // ★ プレイリストがあるときは「seek」を曲送り/戻しに差し替え
+      navigator.mediaSession.setActionHandler('seekbackward', () => hasPrev ? playPrevTrack() : (audioEl.currentTime = 0));
+      navigator.mediaSession.setActionHandler('seekforward',  () => hasNext ? playNextTrack() : (audioEl.currentTime = audioEl.duration || 0));
+    } else {
+      // 通常の10秒送り/戻し
+      navigator.mediaSession.setActionHandler('seekbackward',  (d) => {
+        const step = d?.seekOffset ?? 10;
+        audioEl.currentTime = Math.max(0, audioEl.currentTime - step);
+      });
+      navigator.mediaSession.setActionHandler('seekforward',   (d) => {
+        const step = d?.seekOffset ?? 10;
+        const dur  = audioEl.duration || 0;
+        audioEl.currentTime = Math.min(dur, audioEl.currentTime + step);
+      });
+    }
+
+    navigator.mediaSession.setActionHandler('seekto',        (d) => {
+      if (d?.fastSeek && 'fastSeek' in audioEl) audioEl.fastSeek(d.seekTime);
+      else audioEl.currentTime = d?.seekTime ?? 0;
+    });
+
+    // 初期位置同期
+    if ('setPositionState' in navigator.mediaSession) {
+      navigator.mediaSession.setPositionState({
+        duration: audioEl.duration || 0,
+        playbackRate: audioEl.playbackRate || 1,
+        position: audioEl.currentTime || 0,
+      });
+    }
+  }
+
+  // 曲が変わった/音声DOMが用意できたら Media Session を適用
+  useEffect(() => {
+    const audioEl = audioRef.current;
+    if (!audioEl || !currentTrack) return;
+    const hasPrev = (currentTrackIndex ?? 0) > 0;
+    const hasNext = (playlist?.length ?? 0) > (currentTrackIndex ?? 0) + 1;
+    applyMediaSession(currentTrack, audioEl, { hasPrev, hasNext });
+  }, [currentTrack, audioRef]);
+
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el || !('mediaSession' in navigator) || !('setPositionState' in navigator.mediaSession)) return;
+
+    const update = () => {
+      try {
+        navigator.mediaSession.setPositionState({
+          duration: el.duration || 0,
+          playbackRate: el.playbackRate || 1,
+          position: el.currentTime || 0,
+        });
+      } catch {}
+    };
+
+    // 主要イベントで同期
+    el.addEventListener('timeupdate', update);
+    el.addEventListener('play', update);
+    el.addEventListener('pause', update);
+    el.addEventListener('loadedmetadata', update);
+    el.addEventListener('ratechange', update);
+
+    // 初回も一回同期
+    update();
+
+    return () => {
+      el.removeEventListener('timeupdate', update);
+      el.removeEventListener('play', update);
+      el.removeEventListener('pause', update);
+      el.removeEventListener('loadedmetadata', update);
+      el.removeEventListener('ratechange', update);
+    };
+  }, [audioRef, currentTrack]);
+
+
+
   useEffect(() => {
     let on = true;
     if (profile && typeof profile.emotes_enabled === 'boolean') {
@@ -252,7 +361,7 @@ export function AudioPlayerProvider({ children }) {
       if (user) {
         supabase
           .from('profiles')
-          .update({ emote_enabled: next })
+          .update({ emotes_enabled: next })
           .eq('id', user.id)
           .then(() => {})
           .catch(console.error);
@@ -289,6 +398,8 @@ export function AudioPlayerProvider({ children }) {
     emoteSuppressUntilMs,
     emotesEnabled,
     toggleEmotes,
+    setQueueAndPlay,
+    setTrackAndPlay,
   };
 
   return (

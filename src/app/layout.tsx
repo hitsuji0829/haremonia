@@ -22,7 +22,12 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: 'HAREmonia',
   description: 'みんなの音楽を、もっと自由に。',
-  themeColor: '#111827'
+};
+import type { Viewport } from 'next';
+export const viewport: Viewport = {
+  themeColor: '#111827',          // 好きな色
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }) {

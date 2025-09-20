@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 type Props = {
   bio?: string | null;
-  maxChars?: number;      // 省略時のトリム長
+  maxChars?: number;
   className?: string;
 };
 
@@ -14,23 +14,24 @@ export default function ArtistBioToggle({
   maxChars = 140,
   className,
 }: Props) {
+  // ← ここより上に return を置かない！
   const [expanded, setExpanded] = useState(false);
   const [isLong, setIsLong] = useState(false);
   const textRef = useRef<HTMLDivElement>(null);
 
-  // bio の長さをチェック
   useEffect(() => {
     setIsLong((bio ?? '').length > maxChars);
   }, [bio, maxChars]);
 
-  // bio が無ければ null を返す
-  if (!bio) return null;
-
+  // 表示テキスト（useMemo は早期returnより前でOK）
   const text = bio ?? '';
   const shown = useMemo(
     () => (expanded || !isLong ? text : text.slice(0, maxChars) + '…'),
     [expanded, isLong, text, maxChars]
   );
+
+  // 早期 return はフック定義の“後ろ”に置く
+  if (!bio) return null;
 
   return (
     <div className={className}>

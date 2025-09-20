@@ -241,10 +241,13 @@ export default function ProfileEditor({ user, initialProfile, onProfileUpdated }
       if (!found)  { setMessage('ユーザー名またはキーが違います。'); setLoading(false); return; }
 
       // 3) 見つかったプロフィールの内容を「今の auth.uid に」引き継ぐ
-      const { data: claimed, error: rpcErr } = await supabase.rpc('claim_profile', {
+      const { data: claimed, error: rpcErr } = await supabase
+      .rpc('claim_profile', {
         p_username: uname,
         p_code: code,
-      });
+        p_new_id: authUser.id,
+      })
+      .single();
       if (rpcErr) {
         console.error('RPC error:', rpcErr);
         setMessage(rpcErr.message || 'プロフィールの引き継ぎに失敗しました。');

@@ -18,7 +18,7 @@ export default function ProfileEditor({ user, initialProfile, onProfileUpdated }
 
   const [issuedCode, setIssuedCode] = useState(null);
   const [showCodeModal, setShowCodeModal] = useState(false);
-  const LS_KEY = (u) => `profile_signin_code_${u}`;
+  const [copied, setCopied] = useState(false);
 
   const [mode, setMode] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -435,6 +435,13 @@ export default function ProfileEditor({ user, initialProfile, onProfileUpdated }
                 {loading ? '保存中...' : 'プロフィールを保存'}
               </button>
 
+              <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                初回の「プロフィールを保存」でログイン用の
+                <span className="font-semibold">10桁キー</span>が発行されます。
+                表示されたキーは<span className="font-semibold">後から再表示できません</span>。
+                端末にも保存しますが、<span className="font-semibold">必ず控えて</span>ください。
+              </p>
+
               {message && (
                 <p className={`text-sm mt-2 ${message.includes('失敗') ? 'text-red-500' : 'text-green-600'}`}>
                   {message}
@@ -517,30 +524,83 @@ export default function ProfileEditor({ user, initialProfile, onProfileUpdated }
 
       {showCodeModal && issuedCode && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={()=>setShowCodeModal(false)} />
-          <div className="relative w-full max-w-md rounded-xl bg-white p-5 shadow-xl">
-            <h3 className="text-lg font-bold mb-2">サインインキーを保存してください</h3>
-            <p className="text-sm text-gray-700 mb-3">
-              今後プロフィールの編集やサインインに必要です。
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowCodeModal(false)}
+            aria-hidden
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="signin-code-title"
+            className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl"
+          >
+            <h3 id="signin-code-title" className="text-xl font-extrabold mb-2 text-gray-900">
+              サインインキーを保存してください
+            </h3>
+            <p className="text-sm text-gray-800 mb-4 leading-relaxed">
+              今後プロフィールの編集やサインインに必要です。<br />
               この端末にも保存しますが、必ず控えてください。
             </p>
-            <div className="rounded-lg border bg-gray-50 p-4 text-center">
-              <div className="font-mono text-3xl tracking-[0.3em] text-gray-900 select-all">
+
+            {/* キーの表示枠（見やすく） */}
+            <div className="rounded-xl border border-gray-300 bg-gray-50 p-4 text-center">
+              <div
+                id="signin-code-text"
+                className="font-mono text-3xl sm:text-4xl tracking-[0.3em] text-gray-900 select-all break-all"
+                style={{ letterSpacing: '0.3em' }}
+              >
                 {issuedCode}
               </div>
             </div>
-            <div className="mt-4 text-right">
+
+            {/* 下段：コピー／閉じる（同サイズ） */}
+            <div className="mt-5 flex items-center justify-between gap-3">
               <button
                 type="button"
-                onClick={()=>setShowCodeModal(false)}
-                className="rounded-md bg-indigo-600 text-white px-4 py-2 hover:bg-indigo-700"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(String(issuedCode || ''));
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1500);
+                  } catch {
+                    // フォールバック：選択→手動コピーを促す
+                    const node = document.getElementById('signin-code-text');
+                    if (node) {
+                      const range = document.createRange();
+                      range.selectNodeContents(node);
+                      const sel = window.getSelection();
+                      sel?.removeAllRanges();
+                      sel?.addRange(range);
+                    }
+                    alert('コピーに失敗しました。手動でコピーしてください。');
+                  }
+                }}
+                className="w-32 rounded-md bg-indigo-600 text-white px-4 py-2 hover:bg-indigo-700"
+              >
+                コピー
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowCodeModal(false)}
+                className="w-32 rounded-md bg-white text-gray-800 border border-gray-300 px-4 py-2 hover:bg-gray-100"
               >
                 閉じる
               </button>
             </div>
+
+            {/* コピー完了のさりげないフィードバック（任意） */}
+            {copied && (
+              <div className="mt-2 text-right text-[11px] text-emerald-600">
+                コピーしました
+              </div>
+            )}
           </div>
         </div>
       )}
+
+
 
     </div>
   );

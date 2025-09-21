@@ -9,6 +9,8 @@ import FeaturedTracks from '@/components/FeaturedTracks';
 import { GENRES, genreLabelFromValue } from '@/lib/genres';
 import LatestTrackCard from '@/components/LatestTrackCard';
 
+export const dynamic = 'force-dynamic';
+
 function TitleBar({ children, noCopy = false }: { children: React.ReactNode; noCopy?: boolean }) {
   return (
     <div

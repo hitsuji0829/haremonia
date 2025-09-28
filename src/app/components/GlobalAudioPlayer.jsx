@@ -94,7 +94,9 @@ export default function GlobalAudioPlayer() {
     >
     <div ref={emoteLayerRef} className="relative mx-auto max-w-5xl px-3 py-2 sm:px-4 sm:py-3">
       {/* エモートを両レイアウト共通で上に重ねる */}
-      <EmoteOverlay />
+      <div className="pointer-events-none absolute inset-0 z-[70]">
+        <EmoteOverlay />
+      </div>
         {/* ===== モバイル版：2段レイアウト（md 未満だけ表示） ===== */}
         <div className="md:hidden">
           {/* 上段：ジャケット / タイトル +（右）操作 */}
@@ -221,7 +223,7 @@ export default function GlobalAudioPlayer() {
 
             {showEmotePicker && !showLyricsPanelLocally && currentTrack && (
               <div
-                className="pointer-events-auto absolute bottom-1 right-full mr-2 z-[90]"
+                className="pointer-events-auto absolute bottom-1 right-full mr-2 z-[200]"
                 onClick={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
               >
@@ -329,7 +331,7 @@ export default function GlobalAudioPlayer() {
             >💬</button>
 
             {showEmotePicker && currentTrack && (
-              <div className="pointer-events-auto absolute bottom-full right-0 mb-2 z-[80]">
+              <div className="pointer-events-auto absolute bottom-full right-0 mb-2 z-[200]">
                 <EmotePicker
                   trackId={currentTrack.id}
                   timestampSeconds={currentTime}

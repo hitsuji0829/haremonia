@@ -38,7 +38,7 @@ export default function EmotePicker({ trackId, timestampSeconds, onClose, layerR
   const handleEmoteClick = async (emoji) => {
     if (loading || cooldown) return; // 投稿中またはクールダウン中は操作不可
 
-      Loading(true); // 投稿開始
+    setLoading(true); // 投稿開始
     setCooldown(true); // クールダウン開始
     const pos = calcAnchorPercentPos();
     const ts = Number.isFinite(timestampSeconds) ? timestampSeconds : 0;
@@ -49,7 +49,7 @@ export default function EmotePicker({ trackId, timestampSeconds, onClose, layerR
         .from('track_emotes')
         .insert({
           track_id: trackId,
-          timestamp_seconds: timestampSeconds,
+          timestamp_seconds: ts,
           emoji: emoji,
         });
 
@@ -67,9 +67,7 @@ export default function EmotePicker({ trackId, timestampSeconds, onClose, layerR
     } finally {
       setLoading(false); // ロード終了
       // クールダウンタイマーを開始
-      setTimeout(() => {
-        setCooldown(false);
-      }, COOLDOWN_TIME);
+      setTimeout(() => setCooldown(false), COOLDOWN_TIME);
     }
   };
 

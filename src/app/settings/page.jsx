@@ -10,16 +10,16 @@ export default function SettingsPage() {
 
   return (
     <main className="p-4 max-w-4xl mx-auto min-h-screen mb-40">
-      <h1 className="text-3xl font-bold mb-6 text-white select-none">設定</h1>
+      <h1 className="text-3xl font-bold mb-6 text-black dark:text-white select-none">設定</h1>
 
 
       <section className="mt-6">
-        <h2 className="text-lg font-semibold text-white mb-3 select-none">表示</h2>
+        <h2 className="text-lg font-semibold text-black dark:text-white mb-3 select-none">表示</h2>
 
         {/* エモート表示トグル（iOS風） */}
         <div className="flex items-center justify-between bg-gray-800 rounded-xl p-4">
         <div>
-            <p className="text-white font-medium">エモートの表示</p>
+            <p className="text-black dark:text-white font-medium">エモートの表示</p>
             <p className="text-sm text-gray-300">再生バー周辺に出る絵文字を表示・非表示にします。</p>
         </div>
 

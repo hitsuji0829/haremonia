@@ -190,13 +190,13 @@ export default async function HomePage() {
 
   return (
     <main className="p-4 max-w-4xl mx-auto mb-40">
-      <h1 className="text-4xl font-extrabold text-white mb-8 text-center select-none pr-28 sm:pr-0">
+      <h1 className="text-4xl font-extrabold text-black dark:text-white mb-8 text-center select-none pr-28 sm:pr-0">
         HAREmonia
       </h1>
 
       {/* HARE Push!! */}
       <section className="mb-10">
-        <h2 className="text-2xl font-bold text-white mb-4 select-none">HARE Push!!</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4 select-none">HARE Push!!</h2>
         {/* Client Component */}
         <FeaturedTracks tracks={harePush.map(track => ({
           ...track,
@@ -212,7 +212,7 @@ export default async function HomePage() {
       />
 
       {/* アーティスト一覧 */}
-      <h2 className="text-2xl font-bold text-gray-100 mb-4 select-none">HAREmonia ARTIST</h2>
+      <h2 className="text-2xl font-bold text-black dark:text-white mb-4 select-none">HAREmonia ARTIST</h2>
       {artistsToShow.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {artistsToShow.map((artist: any) => (
@@ -236,7 +236,7 @@ export default async function HomePage() {
       )}
       {/* 新着（直近1週間） */}
       <section className="mt-12">
-        <h2 className="text-2xl font-bold text-gray-100 mb-4 select-none">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4 select-none">
           HARE Flesh!! -新着トラック-
         </h2>
 

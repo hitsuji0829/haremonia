@@ -118,7 +118,7 @@ export default function ArtistCommentDisplay({ initialArtists }) {
       <section className="lg:w-2/3 flex-grow">
         {selectedArtist ? (
           <>
-            <h2 className="text-2xl font-bold text-white mb-4 select-none">
+            <h2 className="text-2xl font-bold text-black dark:text-white mb-4 select-none">
               {selectedArtist.name} の掲示板
             </h2>
             <CommentSection artistId={selectedArtist.id} />

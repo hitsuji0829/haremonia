@@ -115,7 +115,7 @@ export default function LibraryPage() {
 
   return (
     <main className="p-4 max-w-4xl mx-auto min-h-screen mb-40">
-      <h1 className="text-3xl font-bold mb-6 text-white select-none">ライブラリ</h1>
+      <h1 className="text-3xl font-bold mb-6 text-black dark:text-white select-none">ライブラリ</h1>
       {loadingAuthAndProfile ? (
         <p className="text-gray-500 text-center select-none">認証状態とプロフィールを確認中...</p>
       ) : !user || !profile ? (

@@ -199,7 +199,7 @@ export default function SearchPage() {
 
   return (
     <main className="p-4 max-w-4xl mx-auto min-h-screen mb-40">
-      <h1 className="text-3xl font-bold mb-6 text-white select-none">検索</h1>
+      <h1 className="text-3xl font-bold mb-6 text-black dark:text-white select-none">検索</h1>
 
       {/* 検索ボックス＆ジャンルプルダウン */}
       <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3">

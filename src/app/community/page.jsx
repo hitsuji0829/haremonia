@@ -17,7 +17,7 @@ export default async function CommunityPage() {
     console.error('コミュニティページ: アーティスト一覧取得エラー:', artistsError);
     return (
       <main className="p-4 max-w-4xl mx-auto min-h-screen mb-40">
-        <h1 className="text-3xl font-bold mb-6 text-white">コミュニティ</h1>
+        <h1 className="text-3xl font-bold mb-6 text-black dark:text-white">コミュニティ</h1>
         <p className="text-red-500">アーティスト一覧の読み込みに失敗しました。</p>
       </main>
     );
@@ -28,7 +28,7 @@ export default async function CommunityPage() {
 
   return (
     <main className="p-4 max-w-4xl mx-auto min-h-screen mb-40"> {/* 下部に余白を追加 */}
-      <h1 className="text-3xl font-bold mb-6 text-white">コミュニティ</h1>
+      <h1 className="text-3xl font-bold mb-6 text-black dark:text-white">コミュニティ</h1>
       {artists.length > 0 ? (
         <ArtistCommentDisplay initialArtists={artists} />
       ) : (

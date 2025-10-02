@@ -218,7 +218,7 @@ export default function SettingsFaqPage() {
   return (
     <main className="p-4 max-w-3xl mx-auto mb-40 text-gray-100">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">FAQ</h1>
+        <h1 className="text-3xl text-black dark:text-white sfont-bold">FAQ</h1>
       </div>
 
       <div className="mb-6">

@@ -19,7 +19,7 @@ export default function SettingsPage() {
         {/* エモート表示トグル（iOS風） */}
         <div className="flex items-center justify-between bg-gray-800 rounded-xl p-4">
         <div>
-            <p className="text-black dark:text-white font-medium">エモートの表示</p>
+            <p className="text-white font-medium">エモートの表示</p>
             <p className="text-sm text-gray-300">再生バー周辺に出る絵文字を表示・非表示にします。</p>
         </div>
 
@@ -67,7 +67,7 @@ export default function SettingsPage() {
       </section>
 
       <section className="mt-6">
-        <h2 className="text-lg font-semibold text-white mb-3 select-none">再生バー</h2>
+        <h2 className="text-lg font-semibold text-black dark:text-white mb-3 select-none">再生バー</h2>
 
         {/* シャッフル再生時のアーティスト名表示トグル */}
         <div className="flex items-center justify-between bg-gray-800 rounded-xl p-4">
